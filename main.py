@@ -1,11 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-# from database import SessionLocal,Book
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import asc, desc
 from auth import hash_password
-# from models import User
 from schemas import UserCreate
 from fastapi.security import  OAuth2PasswordRequestForm
 from auth import verify_password, create_access_token, get_current_user
