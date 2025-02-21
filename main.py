@@ -4,7 +4,13 @@ from database import SessionLocal,Book
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import asc, desc
-
+from auth import hash_password, SECRET_KEY, ALGORITHM
+from models import User
+from schemas import UserCreate
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from auth import verify_password, create_access_token
+from datetime import timedelta
+from jose import JWTError, jwt
 
 
 app = FastAPI()
@@ -28,14 +34,28 @@ class BookUpdate(BaseModel):
     author: Optional[str] = None
     year: Optional[int] = None
     
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(status_code=401, detail="Invalid token")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        return username
+    except JWTError:
+        raise credentials_exception
+    
 # Add a new book to the database
 @app.post("/books")
-async def add_book(book: BookCreate, db: Session = Depends(get_db)):
-    new_book = Book(title=book.title, author=book.author, year=book.year)
+def add_book(book: BookCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    new_book = Book(**book.dict())
     db.add(new_book)
     db.commit()
-    db.refresh(new_book)
-    return {"message": "Book added successfully", "book": new_book}
+    return {"message": "Book added successfully"}
+
 
 @app.get("/books")
 def get_books(
@@ -128,5 +148,24 @@ async def delete_book(book_id: int, db: Session = Depends(get_db)):
     
     return {"message": "Book deleted successfully"}
 
+@app.post("/register")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    hashed_password = hash_password(user.password)
+    new_user = User(username=user.username, hashed_password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    return {"message": "User registered successfully"}
 
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    
+    access_token= create_access_token(data={"sub": user.username}, expires_delta=timedelta(minutes=30))
+    return {"access_token": access_token, "token_type": "bearer"}
 
