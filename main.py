@@ -4,13 +4,13 @@ from database import SessionLocal,Book
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import asc, desc
-from auth import hash_password, SECRET_KEY, ALGORITHM
+from auth import hash_password
 from models import User
 from schemas import UserCreate
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from auth import verify_password, create_access_token
+from fastapi.security import  OAuth2PasswordRequestForm
+from auth import verify_password, create_access_token, get_current_user
 from datetime import timedelta
-from jose import JWTError, jwt
+
 
 
 app = FastAPI()
@@ -35,26 +35,14 @@ class BookUpdate(BaseModel):
     year: Optional[int] = None
     
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(status_code=401, detail="Invalid token")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        return username
-    except JWTError:
-        raise credentials_exception
     
 # Add a new book to the database
-@app.post("/books")
 def add_book(book: BookCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     new_book = Book(**book.dict())
     db.add(new_book)
     db.commit()
-    return {"message": "Book added successfully"}
+    return {"message": f"Book added successfully by {current_user}"}
+
 
 
 @app.get("/books")
