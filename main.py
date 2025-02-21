@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal,Book
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy import asc, desc
 
 
 
@@ -42,6 +43,8 @@ def get_books(
     year: int = Query(None, description="Filter books by publication year"),
     title: str = Query(None, description="Search books by title"),
     author: str = Query(None, description="Search books by author"),
+    sort_by: str = Query("title", regex="^(title|author|year)$", description="Sort books by title, author, or year"),
+    order: str = Query("asc", regex="^(asc|desc)$", description="Sorting order: 'asc' or 'desc'"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(10, ge=1, le=100, description="Number of records to return per oage")
 ):
@@ -53,6 +56,13 @@ def get_books(
         query = query.filter(Book.title.ilike(f"%{title}%"))  # Case-insensitive search
     if author:
         query = query.filter(Book.author.ilike(f"%{author}%"))
+    
+    # Sorting logic
+    sort_column = getattr(Book, sort_by)
+    if order == "desc":
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
     
     
     total = query.count()
@@ -117,3 +127,6 @@ async def delete_book(book_id: int, db: Session = Depends(get_db)):
     db.commit()    
     
     return {"message": "Book deleted successfully"}
+
+
+

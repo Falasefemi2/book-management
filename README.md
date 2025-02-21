@@ -218,3 +218,83 @@ book-management-api/
 - Deploy the API to a cloud server (e.g., **Render, Railway, or AWS**)
 
 🚀 **Happy Coding!**
+
+---
+
+## 📌 Endpoints
+
+### **📘 Get Books (with Filtering, Pagination, and Sorting)**
+
+#### **Endpoint:**
+
+```http
+GET /books
+```
+
+#### **Query Parameters:**
+
+| Parameter | Type      | Description                                                              |
+| --------- | --------- | ------------------------------------------------------------------------ |
+| `title`   | `string`  | Search books by title (optional)                                         |
+| `author`  | `string`  | Search books by author (optional)                                        |
+| `year`    | `integer` | Filter books by publication year (optional)                              |
+| `sort_by` | `string`  | Sort books by `title`, `author`, or `year` (default: `title`)            |
+| `order`   | `string`  | Sorting order: `asc` (ascending) or `desc` (descending) (default: `asc`) |
+| `skip`    | `integer` | Number of records to skip (default: `0`)                                 |
+| `limit`   | `integer` | Number of records to return per page (default: `10`, max: `100`)         |
+
+#### **Example Requests:**
+
+1️⃣ **Get first 10 books sorted by title (default order):**
+
+```sh
+GET /books
+```
+
+2️⃣ **Find books by author "Robert C. Martin" and sort by year (newest first):**
+
+```sh
+GET /books?author=martin&sort_by=year&order=desc
+```
+
+3️⃣ **Paginate results (skip first 10, return next 10 books):**
+
+```sh
+GET /books?skip=10&limit=10
+```
+
+4️⃣ **Sort books by title (Z-A) and return only 5 results:**
+
+```sh
+GET /books?sort_by=title&order=desc&limit=5
+```
+
+#### **Example Response:**
+
+```json
+{
+  "total": 100,
+  "books": [
+    {
+      "id": 1,
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "year": 2008
+    },
+    {
+      "id": 2,
+      "title": "The Pragmatic Programmer",
+      "author": "Andrew Hunt",
+      "year": 1999
+    }
+  ]
+}
+```
+
+---
+
+## 🔜 Next Steps: Authentication
+
+We will now implement **JWT-based authentication** to secure the API.
+
+Stay tuned! 🚀
