@@ -24,7 +24,7 @@ This is a **Book Management System API** built using **FastAPI** and **SQLite**.
 
 ```sh
 git clone https://github.com/Falasefemi2/book-management.git
-cd book-management-
+cd book-management
 ```
 
 ### **2️⃣ Create a Virtual Environment**
