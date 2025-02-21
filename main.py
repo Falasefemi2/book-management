@@ -38,7 +38,8 @@ class BookUpdate(BaseModel):
 
     
 # Add a new book to the database
-def add_book(book: BookCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+@app.post("/books")
+async def add_book(book: BookCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     new_book = Book(**book.dict())
     db.add(new_book)
     db.commit()
@@ -47,7 +48,7 @@ def add_book(book: BookCreate, db: Session = Depends(get_db), current_user: str 
 
 
 @app.get("/books")
-def get_books(
+async def get_books(
     db: Session = Depends(get_db),
     year: int = Query(None, description="Filter books by publication year"),
     title: str = Query(None, description="Search books by title"),
