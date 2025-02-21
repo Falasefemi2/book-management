@@ -23,7 +23,7 @@ This is a **Book Management System API** built using **FastAPI** and **SQLite**.
 ### **1️⃣ Clone the Repository**
 
 ```sh
-git clone https://github.com/your-repo/book-management-api.git
+git clone https://github.com/Falasefemi2/book-management.git
 cd book-management-
 ```
 
