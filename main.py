@@ -41,7 +41,9 @@ def get_books(
     db: Session = Depends(get_db),
     year: int = Query(None, description="Filter books by publication year"),
     title: str = Query(None, description="Search books by title"),
-    author: str = Query(None, description="Search books by author")
+    author: str = Query(None, description="Search books by author"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(10, ge=1, le=100, description="Number of records to return per oage")
 ):
     query = db.query(Book)
 
@@ -51,8 +53,12 @@ def get_books(
         query = query.filter(Book.title.ilike(f"%{title}%"))  # Case-insensitive search
     if author:
         query = query.filter(Book.author.ilike(f"%{author}%"))
-
-    return query.all()
+    
+    
+    total = query.count()
+    books = query.offset(skip).limit(limit).all()
+    
+    return {"total": total, "books": books}
 
     
     
