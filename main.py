@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine, Book
+from database import SessionLocal,Book
 from pydantic import BaseModel
 from typing import Optional
 
@@ -36,10 +36,26 @@ async def add_book(book: BookCreate, db: Session = Depends(get_db)):
     db.refresh(new_book)
     return {"message": "Book added successfully", "book": new_book}
 
-# Get all books
 @app.get("/books")
-async  def get_books(db: Session = Depends(get_db)):
-    return db.query(Book).all()
+def get_books(
+    db: Session = Depends(get_db),
+    year: int = Query(None, description="Filter books by publication year"),
+    title: str = Query(None, description="Search books by title"),
+    author: str = Query(None, description="Search books by author")
+):
+    query = db.query(Book)
+
+    if year:
+        query = query.filter(Book.year == year)
+    if title:
+        query = query.filter(Book.title.ilike(f"%{title}%"))  # Case-insensitive search
+    if author:
+        query = query.filter(Book.author.ilike(f"%{author}%"))
+
+    return query.all()
+
+    
+    
 
 @app.get("/books/{book_id}")
 async def get_book(book_id: int, db: Session = Depends(get_db)):
